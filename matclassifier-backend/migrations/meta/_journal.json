@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1744729192921,
+      "tag": "0000_gray_sabretooth",
+      "breakpoints": true
+    }
+  ]
+}

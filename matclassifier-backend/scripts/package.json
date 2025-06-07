@@ -1,0 +1,13 @@
+{
+  "name": "rds-security-updater",
+  "version": "1.0.0",
+  "description": "Script to update RDS security group with dynamic IP",
+  "main": "update-rds-security.js",
+  "scripts": {
+    "start": "node update-rds-security.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ec2": "^3.0.0",
+    "axios": "^1.6.0"
+  }
+}
