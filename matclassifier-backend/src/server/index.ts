@@ -13,17 +13,9 @@ app.use(express.urlencoded({ extended: false }));
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   process.env.AMPLIFY_URL,
-  'https://*.amplifyapp.com',
-  'https://main.d2jjktrxvp3w1j.amplifyapp.com',
-  'https://matclassifier-prod.eba-j7psmy8d.eu-north-1.elasticbeanstalk.com',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://smartclass.in.net',
-  'http://smartclass.in.net',
-  'https://api.smartclass.in.net',
-  'http://api.smartclass.in.net',
-  'https://*.smartclass.in.net',
-  'http://*.smartclass.in.net'
+  "http://localhost:8080", // Local development
+  "http://127.0.0.1:8080", // Local development
+
 ].filter(Boolean);
 
 console.log('CORS Configuration:', {
@@ -126,15 +118,20 @@ app.use((req, res, next) => {
       throw err;
     });
 
-    // Remove or comment out this section
-    // if (app.get("env") === "development") {
-    //   await setupVite(app, server);
-    // } else {
-    //   serveStatic(app);
-    // }
+    // Remove or comment out this section if you don't want to use Vite in production
+    // If you want to use Vite in production, you can keep this section
+    // and ensure that your Vite configuration is set up correctly for production builds.
+    // If you want to serve static files in production, you can use the serveStatic function
+    // instead of setupVite.
+    // This will allow you to serve static files directly from the dist directory.
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
 
     // Use port from environment variable or default to 3000
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 8080;
     server.listen(port, () => {
       log(`serving on http://localhost:${port}`);
     });

@@ -16,13 +16,13 @@ export default defineConfig({
   },
   root: "client",
   build: {
-    outDir: "../dist/public",
+    outDir: "dist",
     emptyOutDir: true,
   },
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://localhost:8080",
         changeOrigin: true,
         secure: false,
       }

@@ -48,14 +48,12 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
+      // Use the client source index.html in development
       const clientTemplate = path.resolve(
         path.dirname(fileURLToPath(import.meta.url)),
-        "..",
-        "client",
-        "index.html",
+        "../../../client/index.html"
       );
 
-      // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
@@ -71,16 +69,8 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // Remove these duplicate imports since they're now at the top of the file
-  // import path from 'path';
-  // import { fileURLToPath } from 'url';
-  
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  
-  // Replace the problematic lines with:
-  const clientTemplate = path.resolve(__dirname, "..", "client", "index.html");
-  // and
-  const distPath = path.resolve(__dirname, "public");
+  // Always resolve from the project root
+  const distPath = path.resolve(process.cwd(), "client/dist");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
