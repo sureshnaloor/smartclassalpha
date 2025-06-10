@@ -37,7 +37,7 @@ app.use(cors({
     // Check if origin matches any allowed pattern
     const isAllowed = allowedOrigins.some(allowed => {
       // Convert wildcard pattern to regex
-      const pattern = allowed.replace(/\./g, '\\.').replace(/\*/g, '.*');
+      const pattern = allowed?.replace(/\./g, '\\.').replace(/\*/g, '.*') || '';
       const regex = new RegExp(`^${pattern}$`);
       const matches = regex.test(origin);
       if (matches) {

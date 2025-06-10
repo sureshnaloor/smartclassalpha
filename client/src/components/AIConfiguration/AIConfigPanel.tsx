@@ -8,7 +8,7 @@ import { AISettings } from '@/types';
 import { Button } from '@/components/ui/button';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2, Save } from 'lucide-react';
 
 interface AIConfigPanelProps {
   aiSettings?: AISettings;
@@ -61,13 +61,13 @@ export function AIConfigPanel({ aiSettings, isLoading }: AIConfigPanelProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm mb-6">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-900">AI Processing Configuration</h3>
+      <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-slate-200">
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+          <h3 className="text-lg font-medium text-slate-800">AI Processing Configuration</h3>
         </div>
         <div className="p-6 flex justify-center items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading AI configuration...</span>
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-slate-600">Loading AI configuration...</span>
         </div>
       </div>
     );
@@ -76,14 +76,14 @@ export function AIConfigPanel({ aiSettings, isLoading }: AIConfigPanelProps) {
   if (!aiSettings) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm mb-6">
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900">AI Processing Configuration</h3>
+    <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-slate-200">
+      <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-blue-50/50 to-cyan-50/50">
+        <h3 className="text-lg font-medium text-slate-800">AI Processing Configuration</h3>
         <Button 
           variant="ghost" 
           size="sm"
           onClick={toggleExpanded}
-          className="text-gray-500"
+          className="text-slate-500 hover:text-slate-700"
         >
           {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
         </Button>
@@ -92,40 +92,51 @@ export function AIConfigPanel({ aiSettings, isLoading }: AIConfigPanelProps) {
       {isExpanded && (
         <div className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <ModelSettings 
-                aiSettings={aiSettings} 
-                onChange={handleFormChange} 
-              />
+            <div className="space-y-6">
+              <div className="bg-slate-50/80 p-4 rounded-lg border border-slate-200">
+                <ModelSettings 
+                  aiSettings={aiSettings} 
+                  onChange={handleFormChange} 
+                />
+              </div>
               
-              <ParameterSliders 
-                aiSettings={aiSettings} 
-                onChange={handleFormChange} 
-              />
+              <div className="bg-slate-50/80 p-4 rounded-lg border border-slate-200">
+                <ParameterSliders 
+                  aiSettings={aiSettings} 
+                  onChange={handleFormChange} 
+                />
+              </div>
               
-              <MLEnhancement
-                aiSettings={aiSettings}
-                onChange={handleFormChange}
-              />
+              <div className="bg-slate-50/80 p-4 rounded-lg border border-slate-200">
+                <MLEnhancement
+                  aiSettings={aiSettings}
+                  onChange={handleFormChange}
+                />
+              </div>
             </div>
             
-            <div>
-              <OutputFormat 
-                aiSettings={aiSettings} 
-                onChange={handleFormChange} 
-              />
+            <div className="space-y-6">
+              <div className="bg-slate-50/80 p-4 rounded-lg border border-slate-200">
+                <OutputFormat 
+                  aiSettings={aiSettings} 
+                  onChange={handleFormChange} 
+                />
+              </div>
               
-              <LearningContext 
-                aiSettings={aiSettings} 
-                onChange={handleFormChange} 
-              />
+              <div className="bg-slate-50/80 p-4 rounded-lg border border-slate-200">
+                <LearningContext 
+                  aiSettings={aiSettings} 
+                  onChange={handleFormChange} 
+                />
+              </div>
             </div>
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4 border-t border-slate-200">
             <Button 
               onClick={handleSaveSettings}
               disabled={isSaving || Object.keys(formValues).length === 0}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
             >
               {isSaving ? (
                 <>
@@ -133,7 +144,10 @@ export function AIConfigPanel({ aiSettings, isLoading }: AIConfigPanelProps) {
                   Saving...
                 </>
               ) : (
-                'Save Settings'
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Settings
+                </>
               )}
             </Button>
           </div>

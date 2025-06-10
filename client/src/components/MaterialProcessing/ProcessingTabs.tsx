@@ -1,23 +1,32 @@
 import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
 import { SingleMaterialForm } from './SingleMaterialForm';
 import { BatchUploadForm } from './BatchUploadForm';
 import { ResultsView } from './ResultsView';
-import { AIConfigPanel } from '../AIConfiguration/AIConfigPanel';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import { AISettings, MaterialProcessingResponse } from '@/types';
 
 export function ProcessingTabs() {
-  const [activeTab, setActiveTab] = useState<'single' | 'batch' | 'results'>('single');
+  const [activeTab, setActiveTab] = useState('single');
   const [processingResult, setProcessingResult] = useState<MaterialProcessingResponse | null>(null);
   const queryClient = useQueryClient();
 
-  // Fetch default AI settings
-  const { data: aiSettings, isLoading: isLoadingSettings } = useQuery({
-    queryKey: ['/api/ai-settings/default'],
+  const { data: aiSettings, isLoading } = useQuery({
+    queryKey: ['aiSettings'],
+    queryFn: async () => {
+      const response = await fetch('http://localhost:8080/api/ai-settings/default');
+      if (!response.ok) {
+        throw new Error('Failed to fetch AI settings');
+      }
+      return response.json();
+    },
   });
 
-  const handleTabClick = (tab: 'single' | 'batch' | 'results') => {
-    setActiveTab(tab);
+  const handleTabClick = (value: string) => {
+    setActiveTab(value);
   };
 
   const handleProcessingComplete = (result: MaterialProcessingResponse) => {
@@ -27,59 +36,66 @@ export function ProcessingTabs() {
     queryClient.invalidateQueries({ queryKey: ['/api/materials'] });
   };
 
-  return (
-    <>
-      <div className="bg-white rounded-lg shadow-sm mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="flex -mb-px">
-            <button 
-              className={`px-6 py-3 border-b-2 ${activeTab === 'single' ? 'border-primary text-primary font-medium' : 'border-transparent text-gray-500 hover:text-gray-900'}`}
-              onClick={() => handleTabClick('single')}
-            >
-              Single Material
-            </button>
-            <button 
-              className={`px-6 py-3 border-b-2 ${activeTab === 'batch' ? 'border-primary text-primary font-medium' : 'border-transparent text-gray-500 hover:text-gray-900'}`}
-              onClick={() => handleTabClick('batch')}
-            >
-              Batch Upload (CSV)
-            </button>
-            <button 
-              className={`px-6 py-3 border-b-2 ${activeTab === 'results' ? 'border-primary text-primary font-medium' : 'border-transparent text-gray-500 hover:text-gray-900'}`}
-              onClick={() => handleTabClick('results')}
-              disabled={!processingResult}
-            >
-              Results
-            </button>
-          </nav>
-        </div>
-        
-        <div className="p-6">
-          {activeTab === 'single' && (
-            <SingleMaterialForm 
-              aiSettings={aiSettings as AISettings} 
-              onProcessingComplete={handleProcessingComplete}
-              isLoadingSettings={isLoadingSettings}
-            />
-          )}
-          
-          {activeTab === 'batch' && (
-            <BatchUploadForm 
-              aiSettings={aiSettings as AISettings}
-              onProcessingComplete={handleProcessingComplete}
-              isLoadingSettings={isLoadingSettings}
-            />
-          )}
-          
-          {activeTab === 'results' && processingResult && (
-            <ResultsView result={processingResult} />
-          )}
-        </div>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
       </div>
-      
-      {(activeTab === 'single' || activeTab === 'batch') && (
-        <AIConfigPanel aiSettings={aiSettings as AISettings} isLoading={isLoadingSettings} />
-      )}
-    </>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-lg">
+        <Tabs defaultValue="single" value={activeTab} onValueChange={handleTabClick} className="w-full">
+          <div className="border-b border-slate-200">
+            <TabsList className="w-full justify-start p-0 bg-transparent">
+              <TabsTrigger
+                value="single"
+                className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 px-6 py-3"
+              >
+                Single Material
+              </TabsTrigger>
+              <TabsTrigger
+                value="batch"
+                className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 px-6 py-3"
+              >
+                Batch Upload
+              </TabsTrigger>
+              <TabsTrigger
+                value="results"
+                className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 px-6 py-3"
+                disabled={!processingResult}
+              >
+                Results
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          <div className="p-6">
+            <TabsContent value="single" className="mt-0">
+              <SingleMaterialForm 
+                aiSettings={aiSettings as AISettings}
+                onProcessingComplete={handleProcessingComplete}
+                isLoadingSettings={isLoading}
+              />
+            </TabsContent>
+            <TabsContent value="batch" className="mt-0">
+              <BatchUploadForm 
+                aiSettings={aiSettings as AISettings}
+                onProcessingComplete={handleProcessingComplete}
+                isLoadingSettings={isLoading}
+              />
+            </TabsContent>
+            <TabsContent value="results" className="mt-0">
+              {processingResult && <ResultsView result={processingResult} />}
+            </TabsContent>
+          </div>
+        </Tabs>
+      </Card>
+    </motion.div>
   );
 }

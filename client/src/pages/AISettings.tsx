@@ -1,136 +1,263 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AISettings as AISettingsType } from '@/types';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardFooter 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Loader2, Save } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { AIConfigPanel } from '@/components/AIConfiguration/AIConfigPanel';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Settings, Cpu, Zap, Shield, Database, Save } from "lucide-react";
+import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
+
+interface AISettings {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  apiKey: string;
+  apiEndpoint: string;
+}
 
 export default function AISettings() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
-  // Fetch AI settings
-  const { data: aiSettings, isLoading, error } = useQuery<AISettingsType>({
-    queryKey: ['/api/ai-settings/default'],
+  const [settings, setSettings] = useState<AISettings>({
+    model: "",
+    temperature: 0.7,
+    maxTokens: 2000,
+    topP: 1,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    apiKey: "",
+    apiEndpoint: "",
   });
-  
-  // Update AI settings mutation
-  const updateSettingsMutation = useMutation({
-    mutationFn: async (settings: Partial<AISettingsType>) => {
-      if (!aiSettings) return null;
-      
-      const response = await fetch(`/api/ai-settings/${aiSettings.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-        credentials: 'include',
-      });
-      
+
+  const { data, isLoading } = useQuery<AISettings>({
+    queryKey: ["aiSettings"],
+    queryFn: async () => {
+      const response = await fetch("/api/ai/settings");
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || response.statusText);
+        throw new Error("Failed to fetch AI settings");
       }
-      
-      return await response.json();
+      return response.json();
+    },
+  });
+
+  // Update settings when data is loaded
+  if (data && !settings.model) {
+    setSettings(data);
+  }
+
+  const updateSettings = useMutation({
+    mutationFn: async (newSettings: AISettings) => {
+      const response = await fetch("/api/ai/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newSettings),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update AI settings");
+      }
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ai-settings/default'] });
+      queryClient.invalidateQueries({ queryKey: ["aiSettings"] });
       toast({
-        title: "Settings saved",
-        description: "AI settings have been updated successfully",
+        title: "Success",
+        description: "AI settings updated successfully",
       });
     },
     onError: (error) => {
       toast({
-        title: "Failed to save settings",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Error",
+        description: "Failed to update AI settings",
         variant: "destructive",
       });
+      console.error("Error updating AI settings:", error);
     },
   });
-  
-  if (error) {
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSettings.mutate(settings);
+  };
+
+  if (isLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center text-red-500 py-8">
-            Error loading AI settings. Please try again.
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Configuration Settings</CardTitle>
-          <CardDescription>
-            Configure the AI models and parameters used for material processing
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="ml-2">Loading AI settings...</span>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200 text-sm text-yellow-800">
-                <p className="font-medium mb-1">Important Notice:</p>
-                <p>
-                  Changes made here will apply to all future material processing requests. These settings 
-                  can be further adjusted during individual processing tasks if needed.
-                </p>
+    <div className="p-4 bg-gradient-to-br from-indigo-50 via-white to-blue-50 min-h-screen">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center gap-3 mb-6"
+        >
+          <Settings className="h-8 w-8 text-indigo-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">AI Settings</h1>
+        </motion.div>
+
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          onSubmit={handleSubmit}
+          className="space-y-6"
+        >
+          <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.16)] transition-all duration-300">
+            <CardHeader className="border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-blue-50">
+              <div className="flex items-center gap-2">
+                <Cpu className="h-5 w-5 text-indigo-600" />
+                <CardTitle className="text-xl text-slate-800">Model Configuration</CardTitle>
               </div>
-              
-              <AIConfigPanel 
-                aiSettings={aiSettings} 
-                isLoading={isLoading} 
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>API Settings</CardTitle>
-          <CardDescription>
-            Configure the API connectivity settings for the language models
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-md border border-blue-200 text-sm">
-              <p>
-                The application currently uses the <strong>OpenAI API</strong> for material processing.
-                The API key is configured through environment variables.
-              </p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-gray-500 mb-2">
-                API connectivity status:
-              </p>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-sm text-green-600 font-medium">Connected</span>
+              <CardDescription className="text-slate-600">
+                Configure the AI model parameters for optimal performance
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="model" className="text-slate-700">Model</Label>
+                  <Input
+                    id="model"
+                    value={settings.model}
+                    onChange={(e) => setSettings({ ...settings, model: e.target.value })}
+                    className="bg-white/80 backdrop-blur-sm border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="gpt-4"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="temperature" className="text-slate-700">Temperature</Label>
+                  <Input
+                    id="temperature"
+                    type="number"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={settings.temperature}
+                    onChange={(e) => setSettings({ ...settings, temperature: parseFloat(e.target.value) })}
+                    className="bg-white/80 backdrop-blur-sm border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="maxTokens" className="text-slate-700">Max Tokens</Label>
+                  <Input
+                    id="maxTokens"
+                    type="number"
+                    min="1"
+                    value={settings.maxTokens}
+                    onChange={(e) => setSettings({ ...settings, maxTokens: parseInt(e.target.value) })}
+                    className="bg-white/80 backdrop-blur-sm border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="topP" className="text-slate-700">Top P</Label>
+                  <Input
+                    id="topP"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={settings.topP}
+                    onChange={(e) => setSettings({ ...settings, topP: parseFloat(e.target.value) })}
+                    className="bg-white/80 backdrop-blur-sm border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="frequencyPenalty" className="text-slate-700">Frequency Penalty</Label>
+                  <Input
+                    id="frequencyPenalty"
+                    type="number"
+                    min="-2"
+                    max="2"
+                    step="0.1"
+                    value={settings.frequencyPenalty}
+                    onChange={(e) => setSettings({ ...settings, frequencyPenalty: parseFloat(e.target.value) })}
+                    className="bg-white/80 backdrop-blur-sm border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="presencePenalty" className="text-slate-700">Presence Penalty</Label>
+                  <Input
+                    id="presencePenalty"
+                    type="number"
+                    min="-2"
+                    max="2"
+                    step="0.1"
+                    value={settings.presencePenalty}
+                    onChange={(e) => setSettings({ ...settings, presencePenalty: parseFloat(e.target.value) })}
+                    className="bg-white/80 backdrop-blur-sm border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.16)] transition-all duration-300">
+            <CardHeader className="border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-blue-50">
+              <div className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-indigo-600" />
+                <CardTitle className="text-xl text-slate-800">API Settings</CardTitle>
+              </div>
+              <CardDescription className="text-slate-600">
+                Configure API endpoints and authentication
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="apiKey" className="text-slate-700">API Key</Label>
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={settings.apiKey}
+                  onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })}
+                  className="bg-white/80 backdrop-blur-sm border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  placeholder="sk-..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="apiEndpoint" className="text-slate-700">API Endpoint</Label>
+                <Input
+                  id="apiEndpoint"
+                  value={settings.apiEndpoint}
+                  onChange={(e) => setSettings({ ...settings, apiEndpoint: e.target.value })}
+                  className="bg-white/80 backdrop-blur-sm border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  placeholder="https://api.openai.com/v1"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+              disabled={updateSettings.isPending}
+            >
+              {updateSettings.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save Settings
+                </>
+              )}
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </motion.form>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { db } from './db';
-import { aiSettings, users } from '../shared/schema';
+import { aiSettings, users } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';
 
 /**

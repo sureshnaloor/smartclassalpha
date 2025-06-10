@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { processMaterial, AIProcessingRequestSchema, AIProcessingResponseSchema } from "./openai";
-import { insertMaterialSchema, insertProcessingResultSchema, insertLearningExampleSchema } from "../shared/schema";
+import { insertMaterialSchema, insertProcessingResultSchema, insertLearningExampleSchema } from "../../../shared/schema";
 import multer from "multer";
 import { parse as csvParse } from "csv-parse";
 import fs from "fs";

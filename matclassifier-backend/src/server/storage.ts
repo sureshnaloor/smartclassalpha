@@ -5,7 +5,7 @@ import {
   processingHistory, type ProcessingHistory, type InsertProcessingHistory,
   aiSettings, type AISettings, type InsertAISettings,
   learningExamples, type LearningExample, type InsertLearningExample
-} from "../shared/schema";
+} from "../../../shared/schema";
 import { DbStorage } from "./dbStorage";
 
 // Define the storage interface

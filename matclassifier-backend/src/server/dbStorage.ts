@@ -8,7 +8,7 @@ import {
   processingHistory, type ProcessingHistory, type InsertProcessingHistory,
   aiSettings, type AISettings, type InsertAISettings,
   learningExamples, type LearningExample, type InsertLearningExample
-} from "../shared/schema";
+} from "../../../shared/schema";
 
 export class DbStorage implements IStorage {
   // User operations

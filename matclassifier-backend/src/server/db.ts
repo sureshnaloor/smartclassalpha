@@ -1,8 +1,8 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import * as schema from '../shared/schema';
-import fs from 'fs';
-import path from 'path';
+import * as schema from '../../../shared/schema';
+// import fs from 'fs';
+// import path from 'path';
 
 // Check for database URL environment variable
 if (!process.env.DATABASE_URL) {
