@@ -1,13 +1,11 @@
 import { AISettings, MaterialInputForm, MaterialProcessingResponse, BatchProcessingResponse } from '@/types';
 
 // Debug message to verify the file is loaded
-console.log('API Module Loaded - Development Mode');
+console.log('API Module Loaded - Production Mode');
 
-// In development, we use the proxy, so we don't need the base URL
-// In production, we use the full Elastic Beanstalk URL
-const API_BASE_URL = import.meta.env.PROD 
-  ? import.meta.env.VITE_API_URL 
-  : '/api';
+// In production, we serve from the same domain, so we can use relative URLs
+// In development, we use the proxy
+const API_BASE_URL = '/api';
 
 // Debug logging
 console.log('API Configuration:', {
@@ -19,7 +17,6 @@ console.log('API Configuration:', {
   'Window Location': window.location.href,
   'API Base URL': API_BASE_URL,
   'Is Production': import.meta.env.PROD,
-  'Using Proxy': !import.meta.env.PROD,
   'Development Mode': import.meta.env.MODE === 'development'
 });
 
