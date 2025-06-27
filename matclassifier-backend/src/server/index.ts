@@ -15,7 +15,8 @@ const allowedOrigins = [
   process.env.AMPLIFY_URL,
   "http://localhost:8080", // Local development
   "http://127.0.0.1:8080", // Local development
-
+  "http://3.121.76.242:8080", // AWS Lightsail instance
+  "http://3.121.76.242", // AWS Lightsail instance without port
 ].filter(Boolean);
 
 console.log('CORS Configuration:', {
