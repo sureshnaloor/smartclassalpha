@@ -13,6 +13,7 @@
     "start:backend": "node matclassifier-backend/dist/index.js",
     "start:client": "vite preview --config vite.config.ts",
     "start": "NODE_ENV=production node matclassifier-backend/dist/index.js",
+    "start:dev": "NODE_ENV=development node matclassifier-backend/dist/index.js",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "migrate": "drizzle-kit push",
     "deploy": "sh matclassifier-backend/deploy.sh"

@@ -118,22 +118,21 @@ app.use((req, res, next) => {
       throw err;
     });
 
-    // Remove or comment out this section if you don't want to use Vite in production
-    // If you want to use Vite in production, you can keep this section
-    // and ensure that your Vite configuration is set up correctly for production builds.
-    // If you want to serve static files in production, you can use the serveStatic function
-    // instead of setupVite.
-    // This will allow you to serve static files directly from the dist directory.
-    if (app.get("env") === "development") {
+    // Serve static files in production, use Vite dev server in development
+    if (process.env.NODE_ENV === "development") {
       await setupVite(app, server);
     } else {
+      // In production, always serve static files
       serveStatic(app);
     }
 
-    // Use port from environment variable or default to 3000
+    // Use port from environment variable or default to 8080
     const port = process.env.PORT || 8080;
     server.listen(port, () => {
       log(`serving on http://localhost:${port}`);
+      if (process.env.NODE_ENV !== "development") {
+        log(`Static files will be served from client/dist`);
+      }
     });
   } catch (error) {
     console.error("Failed to start server:", error);

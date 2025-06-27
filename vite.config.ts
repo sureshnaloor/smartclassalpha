@@ -15,9 +15,17 @@ export default defineConfig({
     },
   },
   root: "client",
+  base: process.env.NODE_ENV === "production" ? "/" : "/",
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
   },
   server: {
     proxy: {
