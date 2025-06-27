@@ -16,7 +16,8 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL,
     ssl: {
-      rejectUnauthorized: false // For Lightsail managed PostgreSQL
+      rejectUnauthorized: false,
+      checkServerIdentity: () => undefined
     }
   },
 });
