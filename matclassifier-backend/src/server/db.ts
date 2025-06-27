@@ -9,17 +9,14 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
 
-// Read the SSL certificate
-// const sslCert = fs.readFileSync(path.join(process.cwd(), 'rds-ca-2019-root.pem')).toString();
-
-// Create PostgreSQL client with SSL configuration
+// Create PostgreSQL client with SSL configuration for Lightsail
 const client = postgres(process.env.DATABASE_URL, {
-  // ssl: {
-  //   ca: sslCert
-  // },
-  // connection: {
-  //   application_name: 'matclassifier_app'
-  // }
+  ssl: {
+    rejectUnauthorized: false // For Lightsail managed PostgreSQL
+  },
+  connection: {
+    application_name: 'matclassifier_app'
+  }
 });
 
 // Create Drizzle ORM instance with our schema

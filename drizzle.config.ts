@@ -15,8 +15,8 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL,
-    // ssl: {
-    //   ca: sslCert
-    // }
+    ssl: {
+      rejectUnauthorized: false // For Lightsail managed PostgreSQL
+    }
   },
 });
