@@ -17,7 +17,7 @@ export function ProcessingTabs() {
   const { data: aiSettings, isLoading } = useQuery({
     queryKey: ['aiSettings'],
     queryFn: async () => {
-      const response = await fetch('http://localhost:8080/api/ai-settings/default');
+      const response = await fetch('/api/ai-settings/default');
       if (!response.ok) {
         throw new Error('Failed to fetch AI settings');
       }
