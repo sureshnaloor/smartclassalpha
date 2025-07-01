@@ -19,6 +19,8 @@ const allowedOrigins = [
   "http://3.121.76.242", // AWS Lightsail instance without port (old IP)
   "http://18.199.25.237:8080", // AWS Lightsail instance (new IP)
   "http://18.199.25.237", // AWS Lightsail instance without port (new IP)
+  "http://smartclass.in.net", // Domain name
+  "https://smartclass.in.net", // Domain name with HTTPS
 ].filter(Boolean);
 
 console.log('CORS Configuration:', {
