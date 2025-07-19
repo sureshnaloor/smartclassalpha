@@ -7,6 +7,7 @@ import { insertMaterialSchema, insertProcessingResultSchema, insertLearningExamp
 import multer from "multer";
 import { parse as csvParse } from "csv-parse";
 import fs from "fs";
+import { callDeepSeek } from "./deepseek";
 
 // Setup multer for file uploads
 const upload = multer({ dest: "uploads/" });
@@ -297,6 +298,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting learning example:", error);
       res.status(500).json({ message: "Failed to delete learning example" });
+    }
+  });
+
+  // Material Standardization endpoint
+  app.post(`${API_PREFIX}/standardize-materials`, upload.single("file"), async (req, res) => {
+    try {
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const templateFields = JSON.parse(req.body.templateFields || '{}');
+      const transformations = JSON.parse(req.body.transformations || '[]');
+      const aiSettings = JSON.parse(req.body.aiSettings || '{}');
+
+      // Parse CSV file
+      const results: Record<string, any[]> = {
+        standardized: [],
+        oversized: [],
+        uncleansed: [],
+        characteristic_notavailable: []
+      };
+      
+      const visibleResults: any[] = [];
+      let total = 0;
+
+      // Read the file content first to handle CSV parsing more robustly
+      const fileContent = fs.readFileSync(file.path, 'utf-8');
+      const lines = fileContent.split('\n').filter(line => line.trim());
+      
+      // Skip header line
+      const dataLines = lines.slice(1);
+      
+      for (const line of dataLines) {
+        try {
+          total++;
+          
+          // Handle quoted CSV fields properly
+          let description = line.trim();
+          if (description.startsWith('"') && description.endsWith('"')) {
+            description = description.slice(1, -1);
+          }
+          
+          // Create example transformations text
+          const exampleTransformations = transformations
+            .filter((t: any) => t.input && t.output)
+            .map((t: any) => `Input: "${t.input}"\nOutput: "${t.output}"`)
+            .join('\n\n');
+          
+          const prompt = `
+Task: Standardize material descriptions following specific patterns.
+
+EXAMPLE PATTERNS:
+Primary (must be first word): ${templateFields.primary}
+Secondary (size/rating): ${templateFields.secondary}
+Tertiary (material/type): ${templateFields.tertiary}
+Other specs: ${templateFields.other}
+
+If ${templateFields.secondary} has <model> in it, then use the model as the secondary characteristic. if it has <model><partnumber> in it, then use the model & partnumber as the secondary characteristic.
+
+EXAMPLE TRANSFORMATIONS:
+${exampleTransformations}
+
+INPUT DESCRIPTION: "${description}"
+
+RULES:
+1. Output must be in UPPERCASE
+2. Maximum 40 characters
+3. Must follow order: PRIMARY SECONDARY TERTIARY OTHER
+4. Must match pattern of examples
+5. First word MUST match pattern from Primary examples
+6. At least one of Secondary and Tertiary must be present in the description.
+7. if cleaned description is more than 40 characters, try retaining primary, secondary, tertiary, and any other specs that are present in the description may be trimmed.
+7. If you are not sure that the material can be standardized, output "UNCLEANSED"
+
+Now standardize the input description: "${description}"
+
+if transformed description is more than 40 characters, output "OVERSIZED"
+if you are not finding either 'Secondary' and 'Tertiary' in the description or if you are not sure that the material can be standardized, output "UNCLEANSED"
+if primary characteristic is missing, output "CHARACTERISTIC_NOT_AVAILABLE"
+
+Output only the standardized description or one of these keywords: CHARACTERISTIC_NOT_AVAILABLE, OVERSIZED, UNCLEANSED`;
+
+          console.log(`Processing material: "${description}"`);
+          console.log(`Template fields:`, templateFields);
+          console.log(`Transformations:`, transformations);
+
+          // Call DeepSeek for standardization
+          const result = await callDeepSeek(prompt, parseFloat(aiSettings.temperature || "0.1"));
+          console.log(`AI Response for "${description}": "${result}"`);
+          
+          let type: string;
+          let material: any;
+
+          switch (result) {
+            case 'CHARACTERISTIC_NOT_AVAILABLE':
+              type = 'characteristic_notavailable';
+              material = { originalDescription: description };
+              break;
+            case 'OVERSIZED':
+              type = 'oversized';
+              material = { originalDescription: description, standardDescription: result };
+              break;
+            case 'UNCLEANSED':
+              type = 'uncleansed';
+              material = { originalDescription: description };
+              break;
+            default:
+              type = 'standardized';
+              material = { originalDescription: description, standardDescription: result };
+              break;
+          }
+
+          results[type as keyof typeof results].push(material);
+          visibleResults.push({ type, material });
+
+        } catch (error) {
+          console.error('Error processing material:', error);
+          const description = line.trim().replace(/^"|"$/g, '');
+          results.uncleansed.push({ originalDescription: description });
+          visibleResults.push({ 
+            type: 'uncleansed', 
+            material: { originalDescription: description } 
+          });
+        }
+      }
+      
+      // Delete the temporary file
+      try {
+        fs.unlinkSync(file.path);
+      } catch (unlinkError) {
+        console.error("Error deleting temporary file:", unlinkError);
+      }
+      
+      res.json({
+        total,
+        results,
+        visibleResults
+      });
+
+    } catch (error) {
+      console.error("Error standardizing materials:", error);
+      // Delete the temporary file even on error
+      try {
+        if (req.file && req.file.path) {
+          fs.unlinkSync(req.file.path);
+        }
+      } catch (unlinkError) {
+        console.error("Error deleting temporary file:", unlinkError);
+      }
+      res.status(500).json({ message: "Failed to standardize materials" });
     }
   });
 

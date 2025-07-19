@@ -9,9 +9,14 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
 
-// Create PostgreSQL client with SSL configuration for Lightsail
+// Determine if we're connecting to a local database in development
+const isLocalDevelopment = process.env.NODE_ENV === 'development' && 
+                          (process.env.DATABASE_URL.includes('localhost') || 
+                           process.env.DATABASE_URL.includes('127.0.0.1'));
+
+// Create PostgreSQL client with appropriate SSL configuration
 const client = postgres(process.env.DATABASE_URL, {
-  ssl: {
+  ssl: isLocalDevelopment ? false : {
     rejectUnauthorized: false,
     checkServerIdentity: () => undefined
   },

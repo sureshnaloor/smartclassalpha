@@ -7,6 +7,7 @@ interface HeaderProps {
 const pageHeaders = {
   "/": "Material Processing Dashboard",
   "/history": "Processing History",
+  "/standardization": "Material Standardization",
   "/ai-settings": "AI Settings",
   "/catalog": "Material Catalog",
   "/classification": "Classification Guide",

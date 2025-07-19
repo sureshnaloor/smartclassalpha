@@ -10,6 +10,7 @@ interface SidebarLink {
 const links: SidebarLink[] = [
   { path: "/", label: "Dashboard", icon: "ri-dashboard-line" },
   { path: "/history", label: "Processing History", icon: "ri-history-line" },
+  { path: "/standardization", label: "Material Standardization", icon: "ri-file-list-3-line" },
   { path: "/ai-settings", label: "AI Settings", icon: "ri-settings-4-line" },
   { path: "/catalog", label: "Material Catalog", icon: "ri-folder-chart-line" },
   { path: "/classification", label: "Classification Guide", icon: "ri-book-2-line" },

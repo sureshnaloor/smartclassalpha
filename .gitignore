@@ -43,3 +43,7 @@ Thumbs.db
 coverage/
 client/coverage/
 matclassifier-backend/coverage/
+debug-db.js
+nginx-smartclass.conf
+test-db.js
+test-init.js
